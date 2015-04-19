@@ -53,6 +53,9 @@ helpContents = (name, commands) ->
   """
 
 module.exports = (robot) ->
+  maxChars = process.env.HUBOT_HELP_MAX_CHARS or "500"
+  showHelpURL = process.env.HUBOT_HELP_SHOW_URL or "0"
+  HelpURL = process.env.HUBOT_HELP_URL
   robot.respond /help\s*(.*)?$/i, (msg) ->
     cmds = robot.helpCommands()
     filter = msg.match[1]
@@ -70,8 +73,14 @@ module.exports = (robot) ->
       cmd.replace new RegExp("^#{robot.name}"), prefix
 
     emit = cmds.join "\n"
-
-    msg.send emit
+    
+    if showHelpURL == "1"
+      if emit.length < maxChars
+        msg.send emit
+      else
+        msg.send "Too many characters - try looking here: #{HelpURL}"
+    else
+      msg.send emit
 
   robot.router.get "/#{robot.name}/help", (req, res) ->
     cmds = robot.helpCommands().map (cmd) ->
